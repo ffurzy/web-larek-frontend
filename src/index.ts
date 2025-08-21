@@ -53,7 +53,6 @@ const makeCard = (data: IProductItem, inCatalog = true) => {
 			} else {
 				events.emit('basket:add', { id: data.id });
 			}
-
 			page.counter = app.getBasketCount();
 
 			if (!inCatalog) {
@@ -63,19 +62,24 @@ const makeCard = (data: IProductItem, inCatalog = true) => {
 		},
 	});
 
-	const buttonText = inCatalog
-		? undefined
-		: data.price === null
-		? 'Скоро'
-		: isInBasket(data.id)
-		? 'Удалить из корзины'
-		: 'Купить';
+	let buttonText: string | undefined;
+
+	if (inCatalog) {
+		buttonText = undefined;
+	} else if (data.price === null) {
+		buttonText = 'Скоро';
+	} else if (isInBasket(data.id)) {
+		buttonText = 'Удалить из корзины';
+	} else {
+		buttonText = 'Купить';
+	}
 
 	return view.render({
 		...data,
 		buttonText,
 	});
 };
+
 
 const renderCatalog = (items: IProductItem[]) => {
 	const widgets = items.map((it) => makeCard(it, true));

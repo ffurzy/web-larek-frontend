@@ -4,94 +4,94 @@ import { EventEmitter } from '../base/events';
 import { FormErrors, IOrderForm } from '../../types';
 
 export class Order extends Component<IOrderForm> {
-	private form = this.container as HTMLFormElement;
-	private address = this.container.querySelector(
+	private formElement = this.container as HTMLFormElement;
+	private addressInput = this.container.querySelector(
 		'input[name="address"]'
 	) as HTMLInputElement;
-	private cash = this.container.querySelector(
+	private cashButton = this.container.querySelector(
 		'button[name="cash"]'
 	) as HTMLButtonElement;
-	private card = this.container.querySelector(
+	private cardButton = this.container.querySelector(
 		'button[name="card"]'
 	) as HTMLButtonElement;
-	private err = this.container.querySelector('.form__errors') as HTMLElement;
-	private nextBtn = this.container.querySelector(
+	private errorElement = this.container.querySelector('.form__errors') as HTMLElement;
+	private nextButton = this.container.querySelector(
 		'.order__button'
 	) as HTMLButtonElement;
-	private pay: 'card' | 'cash' = 'card';
+	private selectedPayment: 'card' | 'cash' = 'card';
 
 	constructor(container: HTMLElement, private events: EventEmitter) {
 		super(container);
 
-		this.cash?.addEventListener('click', (e) => {
-			e.preventDefault();
-			this.setPay('cash');
+		this.cashButton?.addEventListener('click', (event) => {
+			event.preventDefault();
+			this.setPayment('cash');
 			this.validate();
 		});
 
-		this.card?.addEventListener('click', (e) => {
-			e.preventDefault();
-			this.setPay('card');
+		this.cardButton?.addEventListener('click', (event) => {
+			event.preventDefault();
+			this.setPayment('card');
 			this.validate();
 		});
 
-		this.address?.addEventListener('input', () => {
+		this.addressInput?.addEventListener('input', () => {
 			this.clearError();
 			this.validate();
 		});
 
-		this.form?.addEventListener('submit', (e) => {
-			e.preventDefault();
+		this.formElement?.addEventListener('submit', (event) => {
+			event.preventDefault();
 			if (this.validate()) {
 				this.events.emit<IOrderForm>('order:to-contacts', {
-					payment: this.pay,
-					address: this.address.value.trim(),
+					payment: this.selectedPayment,
+					address: this.addressInput.value.trim(),
 				});
 			}
 		});
 
-		this.events.on<FormErrors>('form:errors', (f) => this.showErrors(f));
+		this.events.on<FormErrors>('form:errors', (formErrors) => this.showErrors(formErrors));
 	}
 
-	private setPay(kind: 'card' | 'cash') {
-		this.pay = kind;
-		const ACTIVE = 'button_alt-active';
-		this.card?.classList.toggle(ACTIVE, kind === 'card');
-		this.cash?.classList.toggle(ACTIVE, kind === 'cash');
+	private setPayment(type: 'card' | 'cash') {
+		this.selectedPayment = type;
+		const activeClass = 'button_alt-active';
+		this.cardButton?.classList.toggle(activeClass, type === 'card');
+		this.cashButton?.classList.toggle(activeClass, type === 'cash');
 	}
 
 	private validate(): boolean {
-		const addressOk = !!this.address?.value.trim();
-		const payOk = this.pay === 'card' || this.pay === 'cash';
-		const valid = addressOk && payOk;
+		const isAddressValid = !!this.addressInput?.value.trim();
+		const isPaymentValid = this.selectedPayment === 'card' || this.selectedPayment === 'cash';
+		const isValid = isAddressValid && isPaymentValid;
 
-		if (this.nextBtn) this.nextBtn.disabled = !valid;
+		if (this.nextButton) this.nextButton.disabled = !isValid;
 
-		if (!addressOk) {
+		if (!isAddressValid) {
 			this.setError('Необходимо указать адрес');
 		} else {
 			this.clearError();
 		}
 
-		return valid;
+		return isValid;
 	}
 
-	private showErrors(f: FormErrors) {
-		const m = [f.payment, f.address].filter(Boolean).join('; ');
-		this.setText(this.err, m);
+	private showErrors(formErrors: FormErrors) {
+		const errorMessage = [formErrors.payment, formErrors.address].filter(Boolean).join('; ');
+		this.setText(this.errorElement, errorMessage);
 	}
 
 	private setError(message: string) {
-		if (this.err) this.err.textContent = message;
+		if (this.errorElement) this.errorElement.textContent = message;
 	}
 
 	private clearError() {
-		if (this.err) this.err.textContent = '';
+		if (this.errorElement) this.errorElement.textContent = '';
 	}
 
 	render(data: IOrderForm) {
-		this.setPay((data.payment as any) || 'card');
-		if (this.address) this.address.value = data.address ?? '';
+		this.setPayment((data.payment as any) || 'card');
+		if (this.addressInput) this.addressInput.value = data.address ?? '';
 		this.validate();
 		return this.container;
 	}

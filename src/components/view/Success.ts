@@ -3,23 +3,28 @@
 import { Component } from '../base/Component';
 import { ISuccessActions } from '../../types';
 
-export class Success extends Component<{ total: number }> {
-	private description = this.container.querySelector(
-		'.order-success__description'
-	);
+interface ISuccessData {
+	total: number;
+}
 
-	private btn = this.container.querySelector(
+export class Success extends Component<ISuccessData> {
+	private descriptionElement = this.container.querySelector(
+		'.order-success__description'
+	) as HTMLElement;
+
+	private closeButton = this.container.querySelector(
 		'.order-success__close'
 	) as HTMLButtonElement;
 
 	constructor(container: HTMLElement, actions: ISuccessActions) {
 		super(container);
-		this.btn?.addEventListener('click', () => actions.onClick());
+
+		// обработчик закрытия окна успеха
+		this.closeButton?.addEventListener('click', () => actions.onClick());
 	}
 
-	render(data: { total: number }) {
-		this.setText(this.description, `Списано ${data.total} синапсов`);
-
+	render(data: ISuccessData) {
+		this.setText(this.descriptionElement, `Списано ${data.total} синапсов`);
 		return this.container;
 	}
 }

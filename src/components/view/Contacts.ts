@@ -4,50 +4,49 @@ import { EventEmitter } from '../base/events';
 import { FormErrors, IContactsForm } from '../../types';
 
 export class Contacts extends Component<IContactsForm> {
-	private form = this.container as HTMLFormElement;
-	private email = this.container.querySelector(
+	private formElement = this.container as HTMLFormElement;
+	private emailInput = this.container.querySelector(
 		'input[name="email"]'
 	) as HTMLInputElement;
-	private phone = this.container.querySelector(
+	private phoneInput = this.container.querySelector(
 		'input[name="phone"]'
 	) as HTMLInputElement;
-	private err = this.container.querySelector('.form__errors') as HTMLElement;
-	private payBtn = this.container.querySelector(
+	private errorContainer = this.container.querySelector('.form__errors') as HTMLElement;
+	private payButton = this.container.querySelector(
 		'button[type="submit"]'
 	) as HTMLButtonElement;
 
 	constructor(container: HTMLElement, private events: EventEmitter) {
 		super(container);
 
-		this.email?.addEventListener('input', () => this.validate());
-		this.phone?.addEventListener('input', () => this.validate());
+		this.emailInput?.addEventListener('input', () => this.validate());
+		this.phoneInput?.addEventListener('input', () => this.validate());
 
-		this.form?.addEventListener('submit', (e) => {
-			e.preventDefault();
-			console.log('contacts submit caught!');
+		this.formElement?.addEventListener('submit', (event) => {
+			event.preventDefault();
 			this.events.emit<IContactsForm>('contacts:submit', {
-				email: this.email.value,
-				phone: this.phone.value,
+				email: this.emailInput.value,
+				phone: this.phoneInput.value,
 			});
 		});
 
-		this.events.on<FormErrors>('form:errors', (f) => this.showErrors(f));
+		this.events.on<FormErrors>('form:errors', (formErrors) => this.showErrors(formErrors));
 	}
 
 	private validate() {
-		const emailOk = this.email?.value.includes('@');
-		const phoneOk = this.phone?.value.replace(/\D/g, '').length >= 11;
-		if (this.payBtn) this.payBtn.disabled = !(emailOk && phoneOk);
+		const isEmailValid = this.emailInput?.value.includes('@');
+		const isPhoneValid = this.phoneInput?.value.replace(/\D/g, '').length >= 11;
+		if (this.payButton) this.payButton.disabled = !(isEmailValid && isPhoneValid);
 	}
 
-	private showErrors(f: FormErrors) {
-		const m = [f.email, f.phone].filter(Boolean).join('; ');
-		this.setText(this.err, m);
+	private showErrors(formErrors: FormErrors) {
+		const errorMessage = [formErrors.email, formErrors.phone].filter(Boolean).join('; ');
+		this.setText(this.errorContainer, errorMessage);
 	}
 
 	render(data: IContactsForm) {
-		if (this.email) this.email.value = data.email ?? '';
-		if (this.phone) this.phone.value = data.phone ?? '';
+		if (this.emailInput) this.emailInput.value = data.email ?? '';
+		if (this.phoneInput) this.phoneInput.value = data.phone ?? '';
 		this.validate();
 		return this.container;
 	}

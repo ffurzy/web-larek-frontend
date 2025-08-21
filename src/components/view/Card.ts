@@ -7,14 +7,14 @@ type CardHandlers = {
 };
 
 export class Card extends Component<IProductItem> {
-	private title = this.container.querySelector('.card__title');
-	private img = this.container.querySelector(
+	private titleElement = this.container.querySelector('.card__title');
+	private imageElement = this.container.querySelector(
 		'.card__image'
 	) as HTMLImageElement;
-	private price = this.container.querySelector('.card__price');
-	private category = this.container.querySelector('.card__category');
-	private desc = this.container.querySelector('.card__text');
-	private btn = this.container.querySelector(
+	private priceElement = this.container.querySelector('.card__price');
+	private categoryElement = this.container.querySelector('.card__category');
+	private descriptionElement = this.container.querySelector('.card__text');
+	private buttonElement = this.container.querySelector(
 		'.card__button'
 	) as HTMLButtonElement;
 
@@ -33,24 +33,28 @@ export class Card extends Component<IProductItem> {
 			});
 		}
 
-		if (this.mode === 'preview' && this.btn) {
-			this.btn.addEventListener('click', (e) => handlers?.onBuy?.(e));
+		if (this.mode === 'preview' && this.buttonElement) {
+			this.buttonElement.addEventListener('click', (e) =>
+				handlers?.onBuy?.(e)
+			);
 		}
 	}
 
 	render(data: IProductItem & { buttonText?: string }) {
-		this.setText(this.title, data.title);
-		this.setImage(this.img, data.image, data.title);
+		this.setText(this.titleElement, data.title);
+		this.setImage(this.imageElement, data.image, data.title);
 		this.setText(
-			this.price,
+			this.priceElement,
 			data.price == null ? 'Скоро' : `${data.price} синапсов`
 		);
-		this.setText(this.category, data.category);
-		if (this.desc) this.setText(this.desc, data.description ?? '');
+		this.setText(this.categoryElement, data.category);
+		if (this.descriptionElement) {
+			this.setText(this.descriptionElement, data.description ?? '');
+		}
 
-		if (this.mode === 'preview' && this.btn) {
-			this.btn.textContent = data.buttonText ?? 'Купить';
-			this.btn.disabled = data.price == null;
+		if (this.mode === 'preview' && this.buttonElement) {
+			this.buttonElement.textContent = data.buttonText ?? 'Купить';
+			this.buttonElement.disabled = data.price == null;
 		}
 
 		return this.container;

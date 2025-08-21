@@ -16,8 +16,6 @@ import { BasketItem } from './components/view/BasketItem';
 import { Contacts } from './components/view/Contacts';
 import { AppState } from './components/model/AppState';
 
-// --- Инициализация общих объектов ---
-
 const events = new EventEmitter();
 const app = new AppState(events);
 const api = new LarekAPI(CDN_URL, API_URL);
@@ -31,8 +29,6 @@ const tplSuccess = ensureElement<HTMLTemplateElement>('#success');
 const page = new Page(document.body, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const basketView = new Basket(tplBasket, events);
-
-// --- Вспомогательные функции рендера ---
 
 const isInBasket = (id?: string) =>
 	typeof (app as any).isInBasket === 'function'
@@ -104,8 +100,6 @@ const renderBasket = () => {
 	basketView.buttonText = app.getTotal() ? 'Оформить' : 'Корзина пуста';
 };
 
-// --- Подписки на события ---
-
 events.on<{ items: IProductItem[] }>('catalog:update', ({ items }) => {
 	renderCatalog(items);
 });
@@ -146,18 +140,9 @@ events.on<IOrderForm>('order:to-contacts', (form) => {
 });
 
 events.on<IContactsForm>('contacts:submit', async (contacts) => {
-	console.log('---- SUBMIT START ----');
-	console.log('Корзина до сабмита:', app.getBasketItems());
-	console.log('Total до сабмита:', app.getTotal());
-
 	app.setOrderField('email', contacts.email);
 	app.setOrderField('phone', contacts.phone);
-
-	console.log('Order после setOrderField:', app.getOrder());
-
 	const validity = app.validateOrder();
-	console.log('Проверка формы:', validity);
-
 	if (!validity.valid) {
 		console.warn('Ошибки формы:', app.formErrors);
 		events.emit<FormErrors>('form:errors', { ...app.formErrors });
@@ -165,33 +150,24 @@ events.on<IContactsForm>('contacts:submit', async (contacts) => {
 	}
 
 	const total = app.getTotal();
-	console.log('Total перед API-запросом:', total);
-
 	try {
 		const result = await api.orderItems(app.getOrder());
-		console.log('Ответ от API:', result);
-
 		const success = new Success(cloneTemplate(tplSuccess), {
 			onClick: () => modal.close(),
 		});
 		modal.render({ content: success.render({ total }) });
-
 		app.clearBasket();
 		page.counter = 0;
-
-		console.log('Корзина после очистки:', app.getBasketItems());
 	} catch (e) {
 		console.error('Ошибка API:', e);
 	}
-
-	console.log('---- SUBMIT END ----');
 });
 
 events.on<{ locked: boolean }>('page:lock', ({ locked }) => {
 	page.locked = locked;
 });
 
-// --- Первичный рендер ---
+
 (async () => {
 	try {
 		const items = await api.getItems();

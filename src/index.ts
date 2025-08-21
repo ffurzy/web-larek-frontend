@@ -148,7 +148,6 @@ events.on<IContactsForm>('contacts:submit', async (contacts) => {
 	app.setOrderField('phone', contacts.phone);
 	const validity = app.validateOrder();
 	if (!validity.valid) {
-		console.warn('Ошибки формы:', app.formErrors);
 		events.emit<FormErrors>('form:errors', { ...app.formErrors });
 		return;
 	}

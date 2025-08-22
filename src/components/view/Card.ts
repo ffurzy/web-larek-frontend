@@ -12,7 +12,9 @@ export class Card extends Component<IProductItem> {
 		'.card__image'
 	) as HTMLImageElement;
 	private priceElement = this.container.querySelector('.card__price');
-	private categoryElement = this.container.querySelector('.card__category');
+	private categoryElement = this.container.querySelector(
+    '.card__category, .preview__category'
+  ) as HTMLElement | null;
 	private descriptionElement = this.container.querySelector('.card__text');
 	private buttonElement = this.container.querySelector(
 		'.card__button'
@@ -38,6 +40,19 @@ export class Card extends Component<IProductItem> {
 		}
 	}
 
+	 private categoryClass(category?: string): string {
+    const map: Record<string, string> = {
+      'софт-скил': 'soft',
+      'хард-скил': 'hard',
+      'другое': 'other',
+      'дополнительное': 'additional',
+      'кнопка': 'button',
+    };
+    const key = (category || '').toLowerCase();
+    const mod = map[key] ?? 'default';
+    return `${this.mode}__category_${mod}`;
+  }
+
 	render(data: IProductItem & { buttonText?: string }) {
 		this.setText(this.titleElement, data.title);
 		this.setImage(this.imageElement, data.image, data.title);
@@ -45,15 +60,21 @@ export class Card extends Component<IProductItem> {
 			this.priceElement,
 			data.price == null ? 'Бесценно' : `${data.price} синапсов`
 		);
-		this.setText(this.categoryElement, data.category);
-		if (this.descriptionElement) {
-			this.setText(this.descriptionElement, data.description ?? '');
-		}
 
-		if (this.mode === 'preview' && this.buttonElement) {
-			this.buttonElement.textContent = data.buttonText ?? 'Купить';
-			this.buttonElement.disabled = data.price == null;
-		}
-		return this.container;
-	}
+		if (this.categoryElement) {
+      this.setText(this.categoryElement, data.category ?? '');
+      this.categoryElement.className = `${this.mode}__category`;
+      this.categoryElement.classList.add(this.categoryClass(data.category));
+    }
+
+    if (this.descriptionElement) {
+      this.setText(this.descriptionElement, data.description ?? '');
+    }
+
+    if (this.mode === 'preview' && this.buttonElement) {
+      this.buttonElement.textContent = data.buttonText ?? 'Купить';
+      this.buttonElement.disabled = data.price == null;
+    }
+    return this.container;
+  }
 }

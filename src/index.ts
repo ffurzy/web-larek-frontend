@@ -72,7 +72,7 @@ const makeCard = (data: IProductItem, inCatalog = true) => {
 	if (inCatalog) {
 		buttonText = undefined;
 	} else if (data.price === null) {
-		buttonText = 'Скоро';
+		buttonText = 'Недоступно';
 	} else if (isInBasket(data.id)) {
 		buttonText = 'Удалить из корзины';
 	} else {

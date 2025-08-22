@@ -34,9 +34,7 @@ export class Card extends Component<IProductItem> {
 		}
 
 		if (this.mode === 'preview' && this.buttonElement) {
-			this.buttonElement.addEventListener('click', (e) =>
-				handlers?.onBuy?.(e)
-			);
+			this.buttonElement.addEventListener('click', (e) => handlers?.onBuy?.(e));
 		}
 	}
 
@@ -45,7 +43,7 @@ export class Card extends Component<IProductItem> {
 		this.setImage(this.imageElement, data.image, data.title);
 		this.setText(
 			this.priceElement,
-			data.price == null ? 'Скоро' : `${data.price} синапсов`
+			data.price == null ? 'Бесценно' : `${data.price} синапсов`
 		);
 		this.setText(this.categoryElement, data.category);
 		if (this.descriptionElement) {
@@ -56,7 +54,6 @@ export class Card extends Component<IProductItem> {
 			this.buttonElement.textContent = data.buttonText ?? 'Купить';
 			this.buttonElement.disabled = data.price == null;
 		}
-
 		return this.container;
 	}
 }

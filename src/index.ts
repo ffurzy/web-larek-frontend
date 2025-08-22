@@ -26,7 +26,12 @@ const tplBasketItem = ensureElement<HTMLTemplateElement>('#card-basket');
 const tplOrder = ensureElement<HTMLTemplateElement>('#order');
 const tplContacts = ensureElement<HTMLTemplateElement>('#contacts');
 const tplSuccess = ensureElement<HTMLTemplateElement>('#success');
-const page = new Page(document.body, events);
+const page = new Page(document.body);
+
+page.onBasketClick = () => {
+	events.emit('basket:open');
+};
+
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 const basketView = new Basket(tplBasket, events);
 
@@ -80,10 +85,9 @@ const makeCard = (data: IProductItem, inCatalog = true) => {
 	});
 };
 
-
 const renderCatalog = (items: IProductItem[]) => {
 	const widgets = items.map((it) => makeCard(it, true));
-	events.emit('page:catalog', { widgets });
+	page.catalogContent = widgets;
 };
 
 const renderBasket = () => {
@@ -127,14 +131,23 @@ events.on<{ id: string }>('basket:remove', ({ id }) => {
 events.on('order:start', () => {
 	const order = new Order(cloneTemplate(tplOrder), events);
 	modal.render({ content: order.render({ payment: 'card', address: '' }) });
+
+	app.setOrderField('payment', 'card');
+	app.setOrderField('address', '');
+	app.validateOrderStep1();
 });
 
-events.on<IOrderForm>('order:to-contacts', (form) => {
-	app.setOrderField('payment', form.payment);
-	app.setOrderField('address', form.address);
+events.on<{ payment: 'card' | 'cash' }>('order:payment', ({ payment }) => {
+	app.setOrderPayment(payment);
+});
 
+events.on<{ address: string }>('order:address', ({ address }) => {
+	app.setOrderAddress(address);
+});
+
+events.on('order:submit', () => {
+	if (!app.validateOrderStep1()) return;
 	const contacts = new Contacts(cloneTemplate(tplContacts), events);
-
 	modal.render({
 		content: contacts.render({
 			email: app.getOrder().email ?? '',
@@ -170,12 +183,10 @@ events.on<{ locked: boolean }>('page:lock', ({ locked }) => {
 	page.locked = locked;
 });
 
-
 (async () => {
 	try {
 		const items = await api.getItems();
 		app.setCatalog(items);
-		events.emit('catalog:update', { items });
 		page.counter = app.getBasketCount();
 	} catch (e) {
 		console.error('Не удалось получить каталог', e);

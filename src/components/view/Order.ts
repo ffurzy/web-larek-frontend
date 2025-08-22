@@ -14,7 +14,9 @@ export class Order extends Component<IOrderForm> {
 	private cardButton = this.container.querySelector(
 		'button[name="card"]'
 	) as HTMLButtonElement;
-	private errorElement = this.container.querySelector('.form__errors') as HTMLElement;
+	private errorElement = this.container.querySelector(
+		'.form__errors'
+	) as HTMLElement;
 	private nextButton = this.container.querySelector(
 		'.order__button'
 	) as HTMLButtonElement;
@@ -26,31 +28,28 @@ export class Order extends Component<IOrderForm> {
 		this.cashButton?.addEventListener('click', (event) => {
 			event.preventDefault();
 			this.setPayment('cash');
-			this.validate();
+			this.events.emit('order:payment', { payment: 'cash' });
 		});
 
 		this.cardButton?.addEventListener('click', (event) => {
 			event.preventDefault();
 			this.setPayment('card');
-			this.validate();
+			this.events.emit('order:payment', { payment: 'card' });
 		});
 
 		this.addressInput?.addEventListener('input', () => {
-			this.clearError();
-			this.validate();
+			this.events.emit('order:address', { address: this.addressInput.value });
 		});
 
 		this.formElement?.addEventListener('submit', (event) => {
 			event.preventDefault();
-			if (this.validate()) {
-				this.events.emit<IOrderForm>('order:to-contacts', {
-					payment: this.selectedPayment,
-					address: this.addressInput.value.trim(),
-				});
-			}
+			this.events.emit('order:submit');
 		});
 
-		this.events.on<FormErrors>('form:errors', (formErrors) => this.showErrors(formErrors));
+		this.events.on<FormErrors>('form:errors', (formErrors) =>
+			this.showErrors(formErrors)
+		);
+		this.events.on<boolean>('order:valid', (ok) => this.setValid(ok));
 	}
 
 	private setPayment(type: 'card' | 'cash') {
@@ -60,24 +59,14 @@ export class Order extends Component<IOrderForm> {
 		this.cashButton?.classList.toggle(activeClass, type === 'cash');
 	}
 
-	private validate(): boolean {
-		const isAddressValid = !!this.addressInput?.value.trim();
-		const isPaymentValid = this.selectedPayment === 'card' || this.selectedPayment === 'cash';
-		const isValid = isAddressValid && isPaymentValid;
-
-		if (this.nextButton) this.nextButton.disabled = !isValid;
-
-		if (!isAddressValid) {
-			this.setError('Необходимо указать адрес');
-		} else {
-			this.clearError();
-		}
-
-		return isValid;
+	private setValid(ok: boolean) {
+		if (this.nextButton) this.nextButton.disabled = !ok;
 	}
 
 	private showErrors(formErrors: FormErrors) {
-		const errorMessage = [formErrors.payment, formErrors.address].filter(Boolean).join('; ');
+		const errorMessage = [formErrors.payment, formErrors.address]
+			.filter(Boolean)
+			.join('; ');
 		this.setText(this.errorElement, errorMessage);
 	}
 
@@ -92,7 +81,6 @@ export class Order extends Component<IOrderForm> {
 	render(data: IOrderForm) {
 		this.setPayment((data.payment as any) || 'card');
 		if (this.addressInput) this.addressInput.value = data.address ?? '';
-		this.validate();
 		return this.container;
 	}
 }

@@ -72,6 +72,30 @@ export class AppState {
 		return { ...this.order };
 	}
 
+	setOrderPayment(payment: 'card' | 'cash') {
+		this.order.payment = payment;
+		this.validateOrderStep1();
+	}
+
+	setOrderAddress(address: string) {
+		this.order.address = address;
+		this.validateOrderStep1();
+	}
+
+	validateOrderStep1(): boolean {
+		const errors: FormErrors = {};
+		if (!this.order.payment) errors.payment = 'выберите оплату';
+		if (!this.order.address?.trim())
+			errors.address = 'Необходимо указать адрес';
+
+		this.formErrors = errors;
+		const ok = Object.keys(errors).length === 0;
+
+		this.events.emit('form:errors', errors);
+		this.events.emit('order:valid', ok);
+		return ok;
+	}
+
 	validateOrder() {
 		const errs: FormErrors = {};
 		if (!this.order.payment) errs.payment = 'выберите оплату';
@@ -81,6 +105,7 @@ export class AppState {
 
 		this.formErrors = errs;
 		const ok = Object.keys(errs).length === 0;
+		this.events.emit('form:errors', errs);
 		return { valid: ok, errors: ok ? '' : 'есть ошибки' };
 	}
 

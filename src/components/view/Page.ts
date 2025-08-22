@@ -1,7 +1,6 @@
 // Управление общими элементами страницы
 
 import { Component } from '../base/Component';
-import { EventEmitter } from '../base/events';
 
 export class Page extends Component {
 	private catalogElement = document.querySelector('.gallery') as HTMLElement;
@@ -10,22 +9,16 @@ export class Page extends Component {
 	) as HTMLElement;
 	private bodyElement = document.body;
 
-	constructor(container: HTMLElement, private events: EventEmitter) {
+	constructor(container: HTMLElement) {
 		super(container);
 
 		// клик по иконке корзины
 		document.querySelector('.header__basket')?.addEventListener('click', () => {
-			this.events.emit('basket:open');
+			this.onBasketClick?.();
 		});
-
-		// обновление каталога при событии
-		this.events.on<{ widgets: HTMLElement[] }>(
-			'page:catalog',
-			({ widgets }) => {
-				this.catalogContent = widgets;
-			}
-		);
 	}
+
+	public onBasketClick?: () => void;
 
 	// обновляем счётчик корзины
 	set counter(value: number) {
